@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
@@ -13,6 +15,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import com.example.bitmapfromviewkotlin.databinding.ActivityMainBinding
 import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,17 +33,57 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        imageUri = createImageUri()
+       binding.takeSsButton.setOnClickListener {
+           saveImage()
+       }
 
+
+        /*imageUri = createImageUri()
         binding.takeSsButton.setOnClickListener {
             val bitmap = getBitmapFromView(binding.main)
             storeBitmap(bitmap)
             it.isVisible = false
+        }*/
+
+    }
+
+    private fun saveImage() {
+        binding.main.isDrawingCacheEnabled = true
+        binding.main.buildDrawingCache()
+        binding.main.drawingCacheQuality = View.DRAWING_CACHE_QUALITY_HIGH
+
+        val bitmap = binding.main.drawingCache
+        saveBitmap(bitmap)
+
+    }
+
+    private fun saveBitmap(bitmap: Bitmap?) {
+        val root: String = Environment.getExternalStorageDirectory().absolutePath
+        val file: File = File(root + "/Download")
+        val file_name: String = "view_image.png"
+        val myFile: File = File(file, file_name)
+
+        if (myFile.exists()){
+            myFile.delete()
+        }
+
+        try {
+
+            val fileOutputStream: FileOutputStream = FileOutputStream(myFile)
+            bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
+            fileOutputStream.flush()
+            fileOutputStream.close()
+            Toast.makeText(this, "Saved!", Toast.LENGTH_SHORT).show()
+
+            binding.main.isDrawingCacheEnabled = false
+
+        } catch (e: Exception){
+            Toast.makeText(this, "Error: " + e.toString(), Toast.LENGTH_SHORT).show()
         }
 
     }
 
-    private fun storeBitmap(bitmap: Bitmap) {
+    /*private fun storeBitmap(bitmap: Bitmap) {
         val outputStream = applicationContext.contentResolver.openOutputStream(imageUri)
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream!!)
         outputStream.close()
@@ -58,6 +101,6 @@ class MainActivity : AppCompatActivity() {
     private fun createImageUri(): Uri{
         val image = File(applicationContext.filesDir, "camera_photos.png")
         return FileProvider.getUriForFile(applicationContext, "com.example.bitmapfromviewkotlin.FileProvider", image)
-    }
+    }*/
 
 }
